@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-4 md:p-8 bg-gray-100">
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 md:max-w-2xl">
+        <h1 class="text-3xl font-extrabold text-center text-indigo-600 mb-8">Pharmacy System 🏥</h1>
+        <div class="grid grid-cols-1 gap-4 mb-8">
+            <input type="text" id="medName" placeholder="Medicine Name" class="w-full p-3.5 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex gap-2">
+                <input type="number" id="medQty" placeholder="Qty" class="w-1/3 p-3.5 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                <button onclick="addMedicine()" class="w-2/3 bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg">Add Medicine</button>
+            </div>
+        </div>
+        <div class="overflow-x-auto rounded-xl border">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-gray-50 uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-4">Medicine</th>
+                        <th class="px-6 py-4 text-center">Stock</th>
+                        <th class="px-6 py-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="medTableBody" class="divide-y"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        const API_URL = '/api/medicines';
+        async function fetchMedicines() {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            const tableBody = document.getElementById('medTableBody');
+            tableBody.innerHTML = '';
+            data.forEach(med => {
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="px-6 py-4 font-semibold">${med.name}</td>
+                        <td class="px-6 py-4 text-center">${med.quantity}</td>
+                        <td class="px-6 py-4 text-center">
+                            <button onclick="updateQty('${med._id}', ${med.quantity + 1})" class="text-green-600 font-bold">+</button>
+                            <button onclick="updateQty('${med._id}', ${med.quantity - 1})" class="text-orange-600 font-bold px-4">-</button>
+                            <button onclick="deleteMed('${med._id}')" class="text-red-500 text-xs">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+        async function addMedicine() {
+            const name = document.getElementById('medName').value;
+            const quantity = document.getElementById('medQty').value;
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, quantity: parseInt(quantity) })
+            });
+            fetchMedicines();
+        }
+        async function updateQty(id, newQty) {
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: newQty })
+            });
+            fetchMedicines();
+        }
+        async function deleteMed(id) {
+            await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            fetchMedicines();
+        }
+        fetchMedicines();
+    </script>
+</body>
+</html>

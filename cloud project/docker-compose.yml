@@ -1,0 +1,26 @@
+services:
+  db:
+    image: mongo:latest
+    container_name: pharmacy-db
+    restart: always
+
+  backend:
+    build: ./back
+    container_name: pharmacy-backend
+    restart: always
+    environment:
+      - DB_URL=mongodb://db:27017/pharmacy
+    depends_on:
+      - db
+
+  frontend:
+    image: nginx:alpine
+    container_name: pharmacy-frontend
+    restart: always
+    volumes:
+      - ./front:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
